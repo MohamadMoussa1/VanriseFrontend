@@ -1,0 +1,274 @@
+<div class="min-vh-100 d-flex flex-column">
+  <!-- Navigation Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" routerLink="/devices">
+        <i class="bi bi-hdd-network me-2"></i>Vanrise Management
+      </a>
+      <div class="collapse navbar-collapse d-flex justify-content-between">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/devices" routerLinkActive="active">Devices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/clients" routerLinkActive="active">Clients</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/phone-numbers" routerLinkActive="active">Phone Numbers</a>
+          </li>
+        </ul>
+        <span class="navbar-text text-light-50 small d-none d-md-inline">
+          Vanrise Internship Project
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container my-4 flex-grow-1">
+    <!-- Controls Header: Search & Filters Bar + Add Button -->
+    <div class="card shadow-sm mb-4 border-0">
+      <div class="card-body">
+        <div class="row g-3 align-items-center justify-content-between">
+          <!-- Filter Controls -->
+          <div class="col-12 col-lg-8">
+            <form (ngSubmit)="onFilter()" class="row g-2 align-items-center">
+              <div class="col-12 col-sm-5">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Filter by number..."
+                  name="filterNumber"
+                  [(ngModel)]="filterNumber"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <select
+                  class="form-select"
+                  name="filterDeviceId"
+                  [(ngModel)]="filterDeviceId"
+                >
+                  <option value="">All Devices</option>
+                  @for (dev of devices; track dev.id) {
+                    <option [value]="dev.id">{{ dev.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-sm-3 d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary d-flex align-items-center justify-content-center text-nowrap px-3 flex-grow-1"
+                  [disabled]="isLoading"
+                >
+                  Filter
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="resetFilter()"
+                  [disabled]="isLoading"
+                  title="Reset filters"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Add Phone Number Button -->
+          <div class="col-12 col-lg-auto text-lg-end">
+            <button
+              type="button"
+              class="btn btn-success d-flex align-items-center px-3"
+              (click)="openAddModal()"
+            >
+              + Add Phone Number
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Notification -->
+    @if (errorMessage) {
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Error:</strong> {{ errorMessage }}
+        <button type="button" class="btn-close" (click)="errorMessage = null" aria-label="Close"></button>
+      </div>
+    }
+
+    <!-- Phone Numbers List Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0 fw-bold text-secondary">Phone Numbers List</h5>
+        <span class="badge bg-secondary rounded-pill">Total: {{ phoneNumbers.length }}</span>
+      </div>
+
+      <div class="card-body p-0">
+        <!-- Loading Spinner -->
+        @if (isLoading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Fetching phone numbers from server...</p>
+          </div>
+        } @else {
+          <!-- Phone Numbers Table -->
+          @if (phoneNumbers.length > 0) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" style="width: 15%">ID</th>
+                    <th scope="col" style="width: 45%">Phone Number</th>
+                    <th scope="col" style="width: 25%">Device</th>
+                    <th scope="col" class="text-end" style="width: 15%">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (phone of phoneNumbers; track phone.id) {
+                    <tr>
+                      <td class="fw-semibold text-muted">{{ phone.id }}</td>
+                      <td class="fw-medium text-dark">{{ phone.number }}</td>
+                      <td>
+                        <span class="badge bg-secondary">
+                          {{ phone.device }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="openEditModal(phone)"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <p class="text-muted mb-0">No phone numbers found.</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Add / Edit Phone Number Modal -->
+  @if (isModalOpen) {
+    <div
+      class="modal fade show d-block"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="phoneModalTitle"
+      aria-modal="true"
+      style="background-color: rgba(0, 0, 0, 0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold" id="phoneModalTitle">
+              {{ isEditMode ? 'Edit Phone Number' : 'Add Phone Number' }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="Close"
+              (click)="closeModal()"
+            ></button>
+          </div>
+
+          <form (ngSubmit)="savePhoneNumber()">
+            <div class="modal-body">
+              @if (formError) {
+                <div class="alert alert-danger py-2 mb-3 small" role="alert">
+                  {{ formError }}
+                </div>
+              }
+
+              @if (isEditMode) {
+                <div class="mb-3">
+                  <label class="form-label text-muted small fw-semibold">Phone Number ID</label>
+                  <input
+                    type="text"
+                    class="form-control bg-light"
+                    [value]="selectedPhoneNumberId"
+                    disabled
+                    readonly
+                  />
+                </div>
+              }
+
+              <div class="mb-3">
+                <label for="phoneNumberInput" class="form-label fw-semibold">
+                  Phone Number <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="phoneNumberInput"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter phone number"
+                  name="phoneNumber"
+                  [(ngModel)]="currentNumber"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="deviceSelect" class="form-label fw-semibold">
+                  Device <span class="text-danger">*</span>
+                </label>
+                <select
+                  id="deviceSelect"
+                  class="form-select"
+                  name="selectedDeviceId"
+                  [(ngModel)]="selectedDeviceId"
+                  required
+                >
+                  <option [ngValue]="null" disabled>Select a device</option>
+                  @for (dev of devices; track dev.id) {
+                    <option [ngValue]="dev.id">{{ dev.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="closeModal()"
+                [disabled]="isSaving"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="isSaving"
+              >
+                @if (isSaving) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                {{ isEditMode ? 'Update Phone Number' : 'Save Phone Number' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    <span>Vanrise Phone Numbers Management &bull; REST API Integration</span>
+  </footer>
+</div>

@@ -2,12 +2,25 @@
   <!-- Navigation Header -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container">
-      <span class="navbar-brand fw-bold">
-        <i class="bi bi-hdd-network me-2"></i>Devices Management
-      </span>
-      <span class="navbar-text text-light-50 small">
-        Vanrise Internship Project
-      </span>
+      <a class="navbar-brand fw-bold" routerLink="/devices">
+        <i class="bi bi-hdd-network me-2"></i>Vanrise Management
+      </a>
+      <div class="collapse navbar-collapse d-flex justify-content-between">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/devices" routerLinkActive="active">Devices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/clients" routerLinkActive="active">Clients</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/phone-numbers" routerLinkActive="active">Phone Numbers</a>
+          </li>
+        </ul>
+        <span class="navbar-text text-light-50 small d-none d-md-inline">
+          Vanrise Internship Project
+        </span>
+      </div>
     </div>
   </nav>
 

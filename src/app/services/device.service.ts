@@ -20,7 +20,8 @@ export class DeviceService {
   }
 
   addDevice(device: { name: string }): Observable<Device> {
-    return this.http.post<Device>(this.apiUrl, device);
+    const params = new HttpParams().set('name', device.name.trim());
+    return this.http.post<Device>(this.apiUrl, device, { params });
   }
 
   updateDevice(device: Device): Observable<Device> {

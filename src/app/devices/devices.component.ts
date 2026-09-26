@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { DeviceService } from '../services/device.service';
 import { Device } from '../models/device.model';
 
 @Component({
   selector: 'app-devices',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './devices.component.html',
   styleUrl: './devices.component.css'
 })
@@ -131,7 +132,17 @@ export class DevicesComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error updating device:', err);
-          this.formError = 'Failed to update device. Please try again.';
+          if (err.error?.errors) {
+            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
+            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
+            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
+          } else if (err.error?.title) {
+            this.formError = err.error.title;
+          } else if (err.error?.message) {
+            this.formError = err.error.message;
+          } else {
+            this.formError = 'Failed to update device. Please try again.';
+          }
           this.isSaving = false;
           this.cdr.markForCheck();
         }
@@ -149,7 +160,17 @@ export class DevicesComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error adding device:', err);
-          this.formError = 'Failed to add device. Please try again.';
+          if (err.error?.errors) {
+            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
+            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
+            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
+          } else if (err.error?.title) {
+            this.formError = err.error.title;
+          } else if (err.error?.message) {
+            this.formError = err.error.message;
+          } else {
+            this.formError = 'Failed to add device. Please try again.';
+          }
           this.isSaving = false;
           this.cdr.markForCheck();
         }

@@ -1,0 +1,301 @@
+<div class="min-vh-100 d-flex flex-column">
+  <!-- Navigation Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" routerLink="/devices">
+        <i class="bi bi-hdd-network me-2"></i>Vanrise Management
+      </a>
+      <div class="collapse navbar-collapse d-flex justify-content-between">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/devices" routerLinkActive="active">Devices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/clients" routerLinkActive="active">Clients</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/phone-numbers" routerLinkActive="active">Phone Numbers</a>
+          </li>
+        </ul>
+        <span class="navbar-text text-light-50 small d-none d-md-inline">
+          Vanrise Internship Project
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container my-4 flex-grow-1">
+    <!-- Controls Header: Search & Filters Bar + Add Button -->
+    <div class="card shadow-sm mb-4 border-0">
+      <div class="card-body">
+        <div class="row g-3 align-items-center justify-content-between">
+          <!-- Filter Controls -->
+          <div class="col-12 col-lg-8">
+            <form (ngSubmit)="onFilter()" class="row g-2 align-items-center">
+              <div class="col-12 col-sm-5">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Filter by name..."
+                  name="filterName"
+                  [(ngModel)]="filterName"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <select
+                  class="form-select"
+                  name="filterType"
+                  [(ngModel)]="filterType"
+                >
+                  <option value="">All Types</option>
+                  <option value="0">Individual</option>
+                  <option value="1">Organization</option>
+                </select>
+              </div>
+              <div class="col-12 col-sm-3 d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary d-flex align-items-center justify-content-center text-nowrap px-3 flex-grow-1"
+                  [disabled]="isLoading"
+                >
+                  Filter
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="resetFilter()"
+                  [disabled]="isLoading"
+                  title="Reset filters"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Add Client Button -->
+          <div class="col-12 col-lg-auto text-lg-end">
+            <button
+              type="button"
+              class="btn btn-success d-flex align-items-center px-3"
+              (click)="openAddModal()"
+            >
+              + Add Client
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Notification -->
+    @if (errorMessage) {
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Error:</strong> {{ errorMessage }}
+        <button type="button" class="btn-close" (click)="errorMessage = null" aria-label="Close"></button>
+      </div>
+    }
+
+    <!-- Clients List Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0 fw-bold text-secondary">Clients List</h5>
+        <span class="badge bg-secondary rounded-pill">Total: {{ clients.length }}</span>
+      </div>
+
+      <div class="card-body p-0">
+        <!-- Loading Spinner -->
+        @if (isLoading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Fetching clients from server...</p>
+          </div>
+        } @else {
+          <!-- Clients Table -->
+          @if (clients.length > 0) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" style="width: 10%">ID</th>
+                    <th scope="col" style="width: 35%">Client Name</th>
+                    <th scope="col" style="width: 25%">Type</th>
+                    <th scope="col" style="width: 20%">Birth Date</th>
+                    <th scope="col" class="text-end" style="width: 10%">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (client of clients; track client.id) {
+                    <tr>
+                      <td class="fw-semibold text-muted">{{ client.id }}</td>
+                      <td class="fw-medium text-dark">{{ client.name }}</td>
+                      <td>
+                        <span
+                          class="badge"
+                          [ngClass]="{
+                            'bg-primary': client.type === 'Individual' || client.type === '0',
+                            'bg-info text-dark': client.type === 'Organization' || client.type === '1'
+                          }"
+                        >
+                          {{ client.type }}
+                        </span>
+                      </td>
+                      <td class="text-muted">
+                        @if (client.type === 'Individual' || client.type === '0') {
+                          {{ client.birthDate ? (client.birthDate | date:'yyyy-MM-dd') : '—' }}
+                        } @else {
+                          <span class="text-muted fst-italic">—</span>
+                        }
+                      </td>
+                      <td class="text-end">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="openEditModal(client)"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <p class="text-muted mb-0">No clients found.</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Add / Edit Client Modal -->
+  @if (isModalOpen) {
+    <div
+      class="modal fade show d-block"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="clientModalTitle"
+      aria-modal="true"
+      style="background-color: rgba(0, 0, 0, 0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold" id="clientModalTitle">
+              {{ isEditMode ? 'Edit Client' : 'Add Client' }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="Close"
+              (click)="closeModal()"
+            ></button>
+          </div>
+
+          <form (ngSubmit)="saveClient()">
+            <div class="modal-body">
+              @if (formError) {
+                <div class="alert alert-danger py-2 mb-3 small" role="alert">
+                  {{ formError }}
+                </div>
+              }
+
+              @if (isEditMode) {
+                <div class="mb-3">
+                  <label class="form-label text-muted small fw-semibold">Client ID</label>
+                  <input
+                    type="text"
+                    class="form-control bg-light"
+                    [value]="selectedClientId"
+                    disabled
+                    readonly
+                  />
+                </div>
+              }
+
+              <div class="mb-3">
+                <label for="clientNameInput" class="form-label fw-semibold">
+                  Client Name <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="clientNameInput"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter client name"
+                  name="clientName"
+                  [(ngModel)]="currentClientName"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="clientTypeSelect" class="form-label fw-semibold">
+                  Client Type <span class="text-danger">*</span>
+                </label>
+                <select
+                  id="clientTypeSelect"
+                  class="form-select"
+                  name="clientType"
+                  [(ngModel)]="currentClientType"
+                  (ngModelChange)="onTypeChange()"
+                  required
+                >
+                  <option [ngValue]="0">Individual</option>
+                  <option [ngValue]="1">Organization</option>
+                </select>
+              </div>
+
+              @if (currentClientType == 0) {
+                <div class="mb-3">
+                  <label for="birthDateInput" class="form-label fw-semibold">
+                    Birth Date
+                  </label>
+                  <input
+                    id="birthDateInput"
+                    type="date"
+                    class="form-control"
+                    name="birthDate"
+                    [(ngModel)]="currentBirthDate"
+                  />
+                </div>
+              }
+            </div>
+
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="closeModal()"
+                [disabled]="isSaving"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="isSaving"
+              >
+                @if (isSaving) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                {{ isEditMode ? 'Update Client' : 'Save Client' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    <span>Vanrise Clients Management &bull; REST API Integration</span>
+  </footer>
+</div>
