@@ -1,0 +1,212 @@
+<div class="min-vh-100 d-flex flex-column">
+  <!-- Navigation Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+      <span class="navbar-brand fw-bold">
+        <i class="bi bi-hdd-network me-2"></i>Devices Management
+      </span>
+      <span class="navbar-text text-light-50 small">
+        Vanrise Internship Project
+      </span>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container my-4 flex-grow-1">
+    <!-- Controls Header: Search Bar & Add Button -->
+    <div class="card shadow-sm mb-4 border-0">
+      <div class="card-body">
+        <div class="row g-3 align-items-center justify-content-between">
+          <!-- Search Controls (Search triggers ONLY on button click or form submit) -->
+          <div class="col-12 col-md-8 col-lg-6">
+            <form (ngSubmit)="onSearch()" class="d-flex gap-2">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search devices by name..."
+                name="searchQuery"
+                [(ngModel)]="searchText"
+              />
+              <button
+                type="submit"
+                class="btn btn-primary d-flex align-items-center text-nowrap px-3"
+                [disabled]="isLoading"
+              >
+                Search
+              </button>
+            </form>
+          </div>
+
+          <!-- Add Device Button -->
+          <div class="col-12 col-md-auto text-md-end">
+            <button
+              type="button"
+              class="btn btn-success d-flex align-items-center px-3"
+              (click)="openAddModal()"
+            >
+              + Add Device
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Notification -->
+    @if (errorMessage) {
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Error:</strong> {{ errorMessage }}
+        <button type="button" class="btn-close" (click)="errorMessage = null" aria-label="Close"></button>
+      </div>
+    }
+
+    <!-- Devices List Card -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0 fw-bold text-secondary">Devices List</h5>
+        <span class="badge bg-secondary rounded-pill">Total: {{ devices.length }}</span>
+      </div>
+
+      <div class="card-body p-0">
+        <!-- Loading Spinner -->
+        @if (isLoading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted small">Fetching devices from server...</p>
+          </div>
+        } @else {
+          <!-- Devices Table -->
+          @if (devices.length > 0) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" style="width: 15%">ID</th>
+                    <th scope="col" style="width: 60%">Device Name</th>
+                    <th scope="col" class="text-end" style="width: 25%">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (device of devices; track device.id) {
+                    <tr>
+                      <td class="fw-semibold text-muted">{{ device.id }}</td>
+                      <td class="fw-medium text-dark">{{ device.name }}</td>
+                      <td class="text-end">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="openEditModal(device)"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <p class="text-muted mb-0">No devices found.</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Add / Edit Device Modal -->
+  @if (isModalOpen) {
+    <div
+      class="modal fade show d-block"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="deviceModalTitle"
+      aria-modal="true"
+      style="background-color: rgba(0, 0, 0, 0.5);"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold" id="deviceModalTitle">
+              {{ isEditMode ? 'Edit Device' : 'Add Device' }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              aria-label="Close"
+              (click)="closeModal()"
+            ></button>
+          </div>
+
+          <form (ngSubmit)="saveDevice()">
+            <div class="modal-body">
+              @if (formError) {
+                <div class="alert alert-danger py-2 mb-3 small" role="alert">
+                  {{ formError }}
+                </div>
+              }
+
+              @if (isEditMode) {
+                <div class="mb-3">
+                  <label class="form-label text-muted small fw-semibold">Device ID</label>
+                  <input
+                    type="text"
+                    class="form-control bg-light"
+                    [value]="selectedDeviceId"
+                    disabled
+                    readonly
+                  />
+                </div>
+              }
+
+              <div class="mb-3">
+                <label for="deviceNameInput" class="form-label fw-semibold">
+                  Device Name <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="deviceNameInput"
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter device name"
+                  name="deviceName"
+                  [(ngModel)]="currentDeviceName"
+                  required
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="closeModal()"
+                [disabled]="isSaving"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="isSaving"
+              >
+                @if (isSaving) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                }
+                {{ isEditMode ? 'Update Device' : 'Save Device' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    <span>Vanrise Devices Management &bull; REST API Integration</span>
+  </footer>
+</div>
