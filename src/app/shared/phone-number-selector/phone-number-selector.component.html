@@ -1,0 +1,18 @@
+<select
+  [id]="id || null"
+  [name]="name"
+  [class]="selectClass"
+  [disabled]="disabled || isLoading"
+  [required]="required"
+  [ngModel]="selectedValue"
+  (ngModelChange)="onValueChange($event)"
+>
+  @if (showAllOption) {
+    <option [ngValue]="null">{{ allOptionLabel }}</option>
+  } @else if (placeholder && selectedValue === null) {
+    <option [ngValue]="null" disabled selected>{{ placeholder }}</option>
+  }
+  @for (phone of phoneNumbers; track phone.id) {
+    <option [ngValue]="phone.id">{{ phone.number }}</option>
+  }
+</select>
