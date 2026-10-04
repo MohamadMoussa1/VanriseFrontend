@@ -1,0 +1,16 @@
+<select
+  [id]="id || null"
+  [name]="name"
+  [class]="selectClass"
+  [disabled]="disabled"
+  [required]="required"
+  [ngModel]="selectedValue"
+  (ngModelChange)="onValueChange($event)"
+>
+  @if (showAllOption) {
+    <option [ngValue]="null">{{ allOptionLabel }}</option>
+  }
+  @for (option of clientTypeOptions; track option.value) {
+    <option [ngValue]="option.value">{{ option.label }}</option>
+  }
+</select>

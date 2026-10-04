@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -6,11 +6,12 @@ import { PhoneNumberService } from '../services/phone-number.service';
 import { DeviceService } from '../services/device.service';
 import { PhoneNumber, CreatePhoneNumberDto, UpdatePhoneNumberDto } from '../models/phone-number.model';
 import { Device } from '../models/device.model';
+import { DeviceSelectorComponent } from '../shared/device-selector/device-selector.component';
 
 @Component({
   selector: 'app-phone-numbers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, DeviceSelectorComponent],
   templateUrl: './phone-numbers.component.html',
   styleUrl: './phone-numbers.component.css'
 })
@@ -18,6 +19,9 @@ export class PhoneNumbersComponent implements OnInit {
   private readonly phoneNumberService = inject(PhoneNumberService);
   private readonly deviceService = inject(DeviceService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  @ViewChild('filterDeviceSelector') filterDeviceSelector?: DeviceSelectorComponent;
+  @ViewChild('modalDeviceSelector') modalDeviceSelector?: DeviceSelectorComponent;
 
   phoneNumbers: PhoneNumber[] = [];
   devices: Device[] = [];
@@ -29,7 +33,7 @@ export class PhoneNumbersComponent implements OnInit {
 
   // Filter State
   filterNumber: string = '';
-  filterDeviceId: string = ''; // '' for all devices
+  filterDeviceId: number | null = null; // null for all devices
 
   // Modal State
   isModalOpen: boolean = false;
@@ -77,9 +81,9 @@ export class PhoneNumbersComponent implements OnInit {
 
   onFilter(): void {
     const trimmedNumber = this.filterNumber.trim();
-    const deviceIdVal = this.filterDeviceId !== '' ? parseInt(this.filterDeviceId, 10) : null;
+    const deviceIdVal = this.filterDeviceSelector ? this.filterDeviceSelector.getData() : this.filterDeviceId;
 
-    if (!trimmedNumber && deviceIdVal === null) {
+    if (!trimmedNumber && (deviceIdVal === null || deviceIdVal === undefined)) {
       this.loadPhoneNumbers();
       return;
     }
@@ -105,7 +109,7 @@ export class PhoneNumbersComponent implements OnInit {
 
   resetFilter(): void {
     this.filterNumber = '';
-    this.filterDeviceId = '';
+    this.filterDeviceId = null;
     this.loadPhoneNumbers();
   }
 
@@ -153,7 +157,8 @@ export class PhoneNumbersComponent implements OnInit {
       return;
     }
 
-    if (this.selectedDeviceId === null || this.selectedDeviceId === undefined) {
+    const chosenDeviceId = this.modalDeviceSelector ? this.modalDeviceSelector.getData() : this.selectedDeviceId;
+    if (chosenDeviceId === null || chosenDeviceId === undefined) {
       this.formError = 'Please select a device.';
       this.cdr.markForCheck();
       return;
@@ -163,7 +168,7 @@ export class PhoneNumbersComponent implements OnInit {
     this.formError = null;
     this.cdr.markForCheck();
 
-    const deviceIdNum = Number(this.selectedDeviceId);
+    const deviceIdNum = Number(chosenDeviceId);
 
     if (this.isEditMode && this.selectedPhoneNumberId !== null) {
       const updatedPhone: UpdatePhoneNumberDto = {

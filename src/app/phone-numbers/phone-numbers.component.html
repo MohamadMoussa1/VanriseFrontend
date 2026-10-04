@@ -43,16 +43,12 @@
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <select
-                  class="form-select"
-                  name="filterDeviceId"
-                  [(ngModel)]="filterDeviceId"
-                >
-                  <option value="">All Devices</option>
-                  @for (dev of devices; track dev.id) {
-                    <option [value]="dev.id">{{ dev.name }}</option>
-                  }
-                </select>
+                <app-device-selector
+                  #filterDeviceSelector
+                  [showAllOption]="true"
+                  allOptionLabel="All Devices"
+                  [(selectedValue)]="filterDeviceId"
+                ></app-device-selector>
               </div>
               <div class="col-12 col-sm-3 d-flex gap-2">
                 <button
@@ -226,18 +222,14 @@
                 <label for="deviceSelect" class="form-label fw-semibold">
                   Device <span class="text-danger">*</span>
                 </label>
-                <select
+                <app-device-selector
+                  #modalDeviceSelector
                   id="deviceSelect"
-                  class="form-select"
                   name="selectedDeviceId"
-                  [(ngModel)]="selectedDeviceId"
-                  required
-                >
-                  <option [ngValue]="null" disabled>Select a device</option>
-                  @for (dev of devices; track dev.id) {
-                    <option [ngValue]="dev.id">{{ dev.name }}</option>
-                  }
-                </select>
+                  placeholder="Select a device"
+                  [(selectedValue)]="selectedDeviceId"
+                  [required]="true"
+                ></app-device-selector>
               </div>
             </div>
 

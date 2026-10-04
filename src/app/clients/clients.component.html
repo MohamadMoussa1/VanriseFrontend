@@ -43,15 +43,12 @@
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <select
-                  class="form-select"
-                  name="filterType"
-                  [(ngModel)]="filterType"
-                >
-                  <option value="">All Types</option>
-                  <option value="0">Individual</option>
-                  <option value="1">Organization</option>
-                </select>
+                <app-client-type-selector
+                  #filterTypeSelector
+                  [showAllOption]="true"
+                  allOptionLabel="All Types"
+                  [(selectedValue)]="filterType"
+                ></app-client-type-selector>
               </div>
               <div class="col-12 col-sm-3 d-flex gap-2">
                 <button
@@ -239,17 +236,14 @@
                 <label for="clientTypeSelect" class="form-label fw-semibold">
                   Client Type <span class="text-danger">*</span>
                 </label>
-                <select
+                <app-client-type-selector
+                  #modalTypeSelector
                   id="clientTypeSelect"
-                  class="form-select"
                   name="clientType"
-                  [(ngModel)]="currentClientType"
-                  (ngModelChange)="onTypeChange()"
-                  required
-                >
-                  <option [ngValue]="0">Individual</option>
-                  <option [ngValue]="1">Organization</option>
-                </select>
+                  [(selectedValue)]="currentClientType"
+                  (selectionChange)="onTypeChange($event)"
+                  [required]="true"
+                ></app-client-type-selector>
               </div>
 
               @if (currentClientType == 0) {

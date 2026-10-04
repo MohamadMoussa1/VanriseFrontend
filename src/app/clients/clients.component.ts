@@ -1,20 +1,24 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ClientService } from '../services/client.service';
 import { Client, ClientType, CreateClientDto, UpdateClientDto } from '../models/client.model';
+import { ClientTypeSelectorComponent } from '../shared/client-type-selector/client-type-selector.component';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, ClientTypeSelectorComponent],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.css'
 })
 export class ClientsComponent implements OnInit {
   private readonly clientService = inject(ClientService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  @ViewChild('filterTypeSelector') filterTypeSelector?: ClientTypeSelectorComponent;
+  @ViewChild('modalTypeSelector') modalTypeSelector?: ClientTypeSelectorComponent;
 
   clients: Client[] = [];
   isLoading: boolean = false;
@@ -24,7 +28,7 @@ export class ClientsComponent implements OnInit {
 
   // Filter state
   filterName: string = '';
-  filterType: string = ''; // '' for all, '0' for Individual, '1' for Organization
+  filterType: number | null = null; // null for all types, 0 for Individual, 1 for Organization
 
   // Modal State
   isModalOpen: boolean = false;
@@ -62,9 +66,9 @@ export class ClientsComponent implements OnInit {
 
   onFilter(): void {
     const trimmedName = this.filterName.trim();
-    const typeValue = this.filterType !== '' ? parseInt(this.filterType, 10) : null;
+    const typeValue = this.filterTypeSelector ? this.filterTypeSelector.getData() : this.filterType;
 
-    if (!trimmedName && typeValue === null) {
+    if (!trimmedName && (typeValue === null || typeValue === undefined)) {
       this.loadClients();
       return;
     }
@@ -90,7 +94,7 @@ export class ClientsComponent implements OnInit {
 
   resetFilter(): void {
     this.filterName = '';
-    this.filterType = '';
+    this.filterType = null;
     this.loadClients();
   }
 
@@ -129,8 +133,9 @@ export class ClientsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onTypeChange(): void {
-    if (Number(this.currentClientType) === ClientType.Organization) {
+  onTypeChange(newVal?: number | null): void {
+    const selected = newVal !== undefined && newVal !== null ? newVal : this.currentClientType;
+    if (Number(selected) === ClientType.Organization) {
       this.currentBirthDate = '';
     }
   }
@@ -154,7 +159,8 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
-    const typeNum = Number(this.currentClientType);
+    const selectedType = this.modalTypeSelector ? this.modalTypeSelector.getData() : this.currentClientType;
+    const typeNum = selectedType !== null && selectedType !== undefined ? selectedType : ClientType.Individual;
     let birthDateVal: string | null = null;
 
     if (typeNum === ClientType.Individual) {

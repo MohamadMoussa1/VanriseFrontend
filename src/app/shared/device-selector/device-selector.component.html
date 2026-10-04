@@ -1,0 +1,18 @@
+<select
+  [id]="id || null"
+  [name]="name"
+  [class]="selectClass"
+  [disabled]="disabled || isLoading"
+  [required]="required"
+  [ngModel]="selectedValue"
+  (ngModelChange)="onValueChange($event)"
+>
+  @if (showAllOption) {
+    <option [ngValue]="null">{{ allOptionLabel }}</option>
+  } @else if (placeholder && selectedValue === null) {
+    <option [ngValue]="null" disabled selected>{{ placeholder }}</option>
+  }
+  @for (dev of devices; track dev.id) {
+    <option [ngValue]="dev.id">{{ dev.name }}</option>
+  }
+</select>
