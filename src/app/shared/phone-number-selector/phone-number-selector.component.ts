@@ -25,6 +25,27 @@ export class PhoneNumberSelectorComponent implements OnInit {
   @Input() disabled: boolean = false;
   @Input() selectClass: string = 'form-select';
 
+  @Input() set customPhoneNumbers(val: Array<{ id?: number; phoneNumberId?: number; number: string }> | null | undefined) {
+    this._customPhoneNumbers = val
+      ? val.map((item) => ({
+          id: item.phoneNumberId !== undefined ? item.phoneNumberId : (item.id ?? 0),
+          number: item.number,
+          device: (item as any).device || ''
+        }))
+      : null;
+
+    if (this._customPhoneNumbers !== null) {
+      this.phoneNumbers = this._customPhoneNumbers;
+      this.isLoading = false;
+      this.phoneNumbersLoaded.emit(this.phoneNumbers);
+      this.cdr.markForCheck();
+    }
+  }
+  get customPhoneNumbers(): PhoneNumber[] | null {
+    return this._customPhoneNumbers;
+  }
+  private _customPhoneNumbers: PhoneNumber[] | null = null;
+
   @Output() selectedValueChange = new EventEmitter<number | null>();
   @Output() selectionChange = new EventEmitter<number | null>();
   @Output() phoneNumbersLoaded = new EventEmitter<PhoneNumber[]>();
@@ -34,10 +55,17 @@ export class PhoneNumberSelectorComponent implements OnInit {
   errorMessage: string | null = null;
 
   ngOnInit(): void {
-    this.loadPhoneNumbers();
+    if (this._customPhoneNumbers !== null) {
+      this.phoneNumbers = this._customPhoneNumbers;
+    } else {
+      this.loadPhoneNumbers();
+    }
   }
 
   loadPhoneNumbers(): void {
+    if (this._customPhoneNumbers !== null) {
+      return;
+    }
     this.isLoading = true;
     this.errorMessage = null;
     this.cdr.markForCheck();

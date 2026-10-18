@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PhoneNumberReservation } from '../models/phone-number-reservation.model';
+import { PhoneNumberReservation, ActivePhoneNumberReservation } from '../models/phone-number-reservation.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,5 +26,25 @@ export class PhoneNumberReservationService {
     }
 
     return this.http.get<PhoneNumberReservation[]>(`${this.apiUrl}/filter`, { params });
+  }
+
+  getActiveReservations(clientId: number): Observable<ActivePhoneNumberReservation[]> {
+    return this.http.get<ActivePhoneNumberReservation[]>(`${this.apiUrl}/active/${clientId}`);
+  }
+
+  reservePhoneNumber(clientId: number, phoneNumberId: number): Observable<any> {
+    const params = new HttpParams()
+      .set('clientId', clientId.toString())
+      .set('phoneNumberId', phoneNumberId.toString());
+
+    return this.http.post(`${this.apiUrl}/reserve`, null, { params });
+  }
+
+  unreservePhoneNumber(clientId: number, phoneNumberId: number): Observable<any> {
+    const params = new HttpParams()
+      .set('clientId', clientId.toString())
+      .set('phoneNumberId', phoneNumberId.toString());
+
+    return this.http.put(`${this.apiUrl}/unreserve`, null, { params });
   }
 }

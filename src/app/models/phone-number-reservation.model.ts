@@ -5,3 +5,9 @@ export interface PhoneNumberReservation {
   bed: string; // Begin Effective Date
   eed: string | null; // End Effective Date (null = no end date)
 }
+
+export interface ActivePhoneNumberReservation {
+  id: number;
+  phoneNumberId: number;
+  number: string;
+}

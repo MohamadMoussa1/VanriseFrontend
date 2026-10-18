@@ -1,0 +1,15 @@
+<select
+  [id]="id || null"
+  [name]="name"
+  [class]="selectClass"
+  [disabled]="disabled"
+  [ngModel]="selectedValue"
+  (ngModelChange)="onValueChange($event)"
+>
+  @if (showAllOption) {
+    <option [ngValue]="null">{{ allOptionLabel }}</option>
+  }
+  @for (option of statusOptions; track option) {
+    <option [value]="option">{{ option }}</option>
+  }
+</select>
