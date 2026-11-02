@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PhoneNumberReservationService } from '../services/phone-number-reservation.service';
 import { PhoneNumberReservation } from '../models/phone-number-reservation.model';
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 import { PhoneNumberSelectorComponent } from '../shared/phone-number-selector/phone-number-selector.component';
+import { NavbarComponent } from '../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-phone-number-reservations',
@@ -13,10 +13,9 @@ import { PhoneNumberSelectorComponent } from '../shared/phone-number-selector/ph
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
-    RouterLinkActive,
     ClientSelectorComponent,
-    PhoneNumberSelectorComponent
+    PhoneNumberSelectorComponent,
+    NavbarComponent
   ],
   templateUrl: './phone-number-reservations.component.html',
   styleUrl: './phone-number-reservations.component.css'

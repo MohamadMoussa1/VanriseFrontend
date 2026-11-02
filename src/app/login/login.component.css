@@ -1,0 +1,11 @@
+.login-wrapper {
+  background-color: #f8f9fa;
+}
+
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-title {
+  letter-spacing: -0.5px;
+}

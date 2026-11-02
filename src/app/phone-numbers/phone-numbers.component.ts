@@ -1,17 +1,17 @@
 import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PhoneNumberService } from '../services/phone-number.service';
 import { DeviceService } from '../services/device.service';
 import { PhoneNumber, CreatePhoneNumberDto, UpdatePhoneNumberDto } from '../models/phone-number.model';
 import { Device } from '../models/device.model';
 import { DeviceSelectorComponent } from '../shared/device-selector/device-selector.component';
+import { NavbarComponent } from '../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-phone-numbers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, DeviceSelectorComponent],
+  imports: [CommonModule, FormsModule, DeviceSelectorComponent, NavbarComponent],
   templateUrl: './phone-numbers.component.html',
   styleUrl: './phone-numbers.component.css'
 })

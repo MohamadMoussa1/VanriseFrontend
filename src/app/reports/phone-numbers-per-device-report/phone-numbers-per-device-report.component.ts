@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ReportService } from '../../services/report.service';
 import { PhoneNumbersPerDeviceReportItem } from '../../models/report.model';
 import { DeviceSelectorComponent } from '../../shared/device-selector/device-selector.component';
 import { PhoneNumberStatusSelectorComponent } from '../../shared/phone-number-status-selector/phone-number-status-selector.component';
+import { NavbarComponent } from '../../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-phone-numbers-per-device-report',
@@ -13,10 +13,9 @@ import { PhoneNumberStatusSelectorComponent } from '../../shared/phone-number-st
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
-    RouterLinkActive,
     DeviceSelectorComponent,
-    PhoneNumberStatusSelectorComponent
+    PhoneNumberStatusSelectorComponent,
+    NavbarComponent
   ],
   templateUrl: './phone-numbers-per-device-report.component.html',
   styleUrl: './phone-numbers-per-device-report.component.css'

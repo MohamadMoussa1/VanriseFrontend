@@ -1,13 +1,13 @@
 import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ClientService } from '../services/client.service';
 import { Client, ClientType, CreateClientDto, UpdateClientDto } from '../models/client.model';
 import { ClientTypeSelectorComponent } from '../shared/client-type-selector/client-type-selector.component';
 import { PhoneNumberSelectorComponent } from '../shared/phone-number-selector/phone-number-selector.component';
 import { PhoneNumberReservationService } from '../services/phone-number-reservation.service';
 import { ActivePhoneNumberReservation } from '../models/phone-number-reservation.model';
+import { NavbarComponent } from '../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-clients',
@@ -15,10 +15,9 @@ import { ActivePhoneNumberReservation } from '../models/phone-number-reservation
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
-    RouterLinkActive,
     ClientTypeSelectorComponent,
-    PhoneNumberSelectorComponent
+    PhoneNumberSelectorComponent,
+    NavbarComponent
   ],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.css'

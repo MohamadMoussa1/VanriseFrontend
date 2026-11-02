@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" routerLink="/devices">
+      <i class="bi bi-hdd-network me-2"></i>Vanrise Management
+    </a>
+    <div class="collapse navbar-collapse d-flex justify-content-between">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/devices" routerLinkActive="active">Devices</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/clients" routerLinkActive="active">Clients</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/phone-numbers" routerLinkActive="active">Phone Numbers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/phone-number-reservations" routerLinkActive="active">Reservations</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/reports/clients-per-type" routerLinkActive="active">Clients Per Type</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/reports/phone-numbers-per-device" routerLinkActive="active">Phone Numbers Per Device</a>
+        </li>
+      </ul>
+      <div class="d-flex align-items-center gap-3">
+        @if (currentUser; as user) {
+          <span class="navbar-text text-light small d-none d-md-inline">
+            <i class="bi bi-person-circle me-1"></i>{{ user }}
+          </span>
+        }
+        @if (isAuthenticated) {
+          <button
+            type="button"
+            class="btn btn-outline-light btn-sm d-flex align-items-center gap-1"
+            (click)="onLogout()"
+            [disabled]="isLoggingOut"
+            id="logoutBtn"
+          >
+            @if (isLoggingOut) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span>Logging out...</span>
+            } @else {
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Logout</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</nav>
+
+@if (errorMessage) {
+  <div class="container mt-2">
+    <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small" role="alert">
+      <span>{{ errorMessage }}</span>
+      <button
+        type="button"
+        class="btn-close small"
+        (click)="errorMessage = null"
+        aria-label="Close"
+      ></button>
+    </div>
+  </div>
+}

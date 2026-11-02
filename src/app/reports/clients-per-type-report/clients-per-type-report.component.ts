@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ReportService } from '../../services/report.service';
 import { ClientsPerTypeReportItem } from '../../models/report.model';
 import { ClientTypeSelectorComponent } from '../../shared/client-type-selector/client-type-selector.component';
+import { NavbarComponent } from '../../shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-clients-per-type-report',
@@ -12,9 +12,8 @@ import { ClientTypeSelectorComponent } from '../../shared/client-type-selector/c
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
-    RouterLinkActive,
-    ClientTypeSelectorComponent
+    ClientTypeSelectorComponent,
+    NavbarComponent
   ],
   templateUrl: './clients-per-type-report.component.html',
   styleUrl: './clients-per-type-report.component.css'

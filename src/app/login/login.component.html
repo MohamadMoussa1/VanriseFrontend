@@ -1,0 +1,114 @@
+<div class="login-wrapper min-vh-100 d-flex flex-column justify-content-between bg-light">
+  <!-- Minimal Top Header -->
+  <header class="navbar navbar-dark bg-dark shadow-sm">
+    <div class="container justify-content-center">
+      <span class="navbar-brand fw-bold mb-0">
+        <i class="bi bi-hdd-network me-2"></i>Vanrise Management
+      </span>
+    </div>
+  </header>
+
+  <!-- Login Card Container -->
+  <main class="container my-auto py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+              <h2 class="card-title fw-bold text-dark mb-1">Login</h2>
+              <p class="text-muted small">Enter your credentials to access the system</p>
+            </div>
+
+            <!-- Error Notification Alert -->
+            @if (errorMessage) {
+              <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3 small" role="alert">
+                <span>{{ errorMessage }}</span>
+                <button
+                  type="button"
+                  class="btn-close small"
+                  (click)="errorMessage = null"
+                  aria-label="Close"
+                ></button>
+              </div>
+            }
+
+            <form (ngSubmit)="onSubmit()" novalidate>
+              <!-- Username Field -->
+              <div class="mb-3">
+                <label for="usernameInput" class="form-label fw-semibold">
+                  Username <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="usernameInput"
+                  type="text"
+                  class="form-control"
+                  [class.is-invalid]="usernameError"
+                  placeholder="Enter username"
+                  name="username"
+                  [(ngModel)]="username"
+                  (input)="usernameError = null; onFieldChange()"
+                  [disabled]="isLoading"
+                  autocomplete="username"
+                  required
+                  autofocus
+                />
+                @if (usernameError) {
+                  <div class="invalid-feedback d-block">
+                    {{ usernameError }}
+                  </div>
+                }
+              </div>
+
+              <!-- Password Field -->
+              <div class="mb-4">
+                <label for="passwordInput" class="form-label fw-semibold">
+                  Password <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="passwordInput"
+                  type="password"
+                  class="form-control"
+                  [class.is-invalid]="passwordError"
+                  placeholder="Enter password"
+                  name="password"
+                  [(ngModel)]="password"
+                  (input)="passwordError = null; onFieldChange()"
+                  [disabled]="isLoading"
+                  autocomplete="current-password"
+                  required
+                />
+                @if (passwordError) {
+                  <div class="invalid-feedback d-block">
+                    {{ passwordError }}
+                  </div>
+                }
+              </div>
+
+              <!-- Submit Button -->
+              <div class="d-grid">
+                <button
+                  id="loginButton"
+                  type="submit"
+                  class="btn btn-primary py-2 fw-semibold d-flex align-items-center justify-content-center"
+                  [disabled]="isLoading"
+                >
+                  @if (isLoading) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Logging in...</span>
+                  } @else {
+                    <span>Login</span>
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    <span>Vanrise Internship Project &bull; Authentication</span>
+  </footer>
+</div>
