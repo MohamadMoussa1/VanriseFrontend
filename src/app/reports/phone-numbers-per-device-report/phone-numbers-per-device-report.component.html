@@ -16,6 +16,7 @@
               [showAllOption]="true"
               allOptionLabel="All Devices"
               [(selectedValue)]="filterDeviceId"
+              (selectionChange)="onFilter()"
             ></app-device-selector>
           </div>
 
@@ -27,6 +28,7 @@
               [showAllOption]="true"
               allOptionLabel="All Statuses"
               [(selectedValue)]="filterStatus"
+              (selectionChange)="onFilter()"
             ></app-phone-number-status-selector>
           </div>
 
@@ -86,7 +88,7 @@
                   <tr>
                     <th scope="col" style="width: 40%">Device</th>
                     <th scope="col" style="width: 35%">Phone Numbers Status</th>
-                    <th scope="col" style="width: 25%"># of Phone Numbers</th>
+                    <th scope="col" style="width: 25%">No of Phone Numbers</th>
                   </tr>
                 </thead>
                 <tbody>

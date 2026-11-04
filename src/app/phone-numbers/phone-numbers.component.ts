@@ -7,6 +7,7 @@ import { PhoneNumber, CreatePhoneNumberDto, UpdatePhoneNumberDto } from '../mode
 import { Device } from '../models/device.model';
 import { DeviceSelectorComponent } from '../shared/device-selector/device-selector.component';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
+import { extractErrorMessage, extractSuccessMessage } from '../utils/error-handler.util';
 
 @Component({
   selector: 'app-phone-numbers',
@@ -29,6 +30,7 @@ export class PhoneNumbersComponent implements OnInit {
   isLoading: boolean = false;
   isSaving: boolean = false;
   errorMessage: string | null = null;
+  successMessage: string | null = null;
   formError: string | null = null;
 
   // Filter State
@@ -72,7 +74,7 @@ export class PhoneNumbersComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching phone numbers:', err);
-        this.errorMessage = 'Failed to load phone numbers from the server. Ensure the backend is running.';
+        this.errorMessage = extractErrorMessage(err, 'Failed to load phone numbers from the server.');
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -100,7 +102,12 @@ export class PhoneNumbersComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error filtering phone numbers:', err);
-        this.errorMessage = 'Failed to filter phone numbers.';
+        if (err.status === 404) {
+          this.phoneNumbers = [];
+          this.errorMessage = extractErrorMessage(err, 'No phone numbers found matching the filter criteria.');
+        } else {
+          this.errorMessage = extractErrorMessage(err, 'Failed to filter phone numbers.');
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -150,6 +157,10 @@ export class PhoneNumbersComponent implements OnInit {
   }
 
   savePhoneNumber(): void {
+    if (this.isSaving) {
+      return;
+    }
+
     const trimmedNumber = this.currentNumber.trim();
     if (!trimmedNumber) {
       this.formError = 'Phone number is required.';
@@ -157,9 +168,15 @@ export class PhoneNumbersComponent implements OnInit {
       return;
     }
 
+    if (trimmedNumber.length > 50) {
+      this.formError = 'Phone number cannot exceed 50 characters.';
+      this.cdr.markForCheck();
+      return;
+    }
+
     const chosenDeviceId = this.modalDeviceSelector ? this.modalDeviceSelector.getData() : this.selectedDeviceId;
     if (chosenDeviceId === null || chosenDeviceId === undefined) {
-      this.formError = 'Please select a device.';
+      this.formError = 'Device selection is required.';
       this.cdr.markForCheck();
       return;
     }
@@ -178,25 +195,21 @@ export class PhoneNumbersComponent implements OnInit {
       };
 
       this.phoneNumberService.updatePhoneNumber(updatedPhone).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Phone number updated successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadPhoneNumbers();
         },
         error: (err) => {
           console.error('Error updating phone number:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to update phone number. Please try again.';
-          }
           this.isSaving = false;
+          if (err.status === 404) {
+            this.formError = extractErrorMessage(err, 'Phone number or device not found.');
+          } else {
+            this.formError = extractErrorMessage(err, 'Failed to update phone number. Please try again.');
+          }
           this.cdr.markForCheck();
         }
       });
@@ -207,25 +220,17 @@ export class PhoneNumbersComponent implements OnInit {
       };
 
       this.phoneNumberService.addPhoneNumber(newPhone).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Phone number added successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadPhoneNumbers();
         },
         error: (err) => {
           console.error('Error adding phone number:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to add phone number. Please try again.';
-          }
           this.isSaving = false;
+          this.formError = extractErrorMessage(err, 'Failed to add phone number. Please try again.');
           this.cdr.markForCheck();
         }
       });

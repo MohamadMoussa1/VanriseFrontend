@@ -28,11 +28,11 @@ export class ClientService {
     return this.http.get<Client[]>(`${this.apiUrl}/filter`, { params });
   }
 
-  addClient(client: CreateClientDto): Observable<Client> {
-    return this.http.post<Client>(this.apiUrl, client);
+  addClient(client: CreateClientDto): Observable<any> {
+    return this.http.post<any>(this.apiUrl, client);
   }
 
-  updateClient(client: UpdateClientDto): Observable<Client> {
-    return this.http.put<Client>(this.apiUrl, client);
+  updateClient(client: UpdateClientDto): Observable<any> {
+    return this.http.put<any>(this.apiUrl, client);
   }
 }

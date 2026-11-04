@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { extractErrorMessage } from '../utils/error-handler.util';
 
 @Component({
   selector: 'app-login',
@@ -75,15 +76,10 @@ export class LoginComponent {
         console.error('Login error status:', err.status, err.statusText);
 
         if (err.status === 401) {
-          this.errorMessage = 'Invalid username or password.';
-        } else if (err.status === 0) {
-          this.errorMessage = 'Unable to connect to the authentication server. Please ensure the backend is running.';
-        } else if (err.status >= 500) {
-          this.errorMessage = 'A server error occurred. Please try again later.';
-        } else if (err.error?.message) {
-          this.errorMessage = err.error.message;
+          const customMsg = (typeof err.error === 'string' && err.error.trim()) || err.error?.message;
+          this.errorMessage = customMsg || 'Invalid username or password.';
         } else {
-          this.errorMessage = 'Login failed. Please check your credentials and try again.';
+          this.errorMessage = extractErrorMessage(err, 'Login failed. Please check your credentials and try again.');
         }
 
         this.cdr.markForCheck();

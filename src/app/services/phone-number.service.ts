@@ -28,11 +28,11 @@ export class PhoneNumberService {
     return this.http.get<PhoneNumber[]>(`${this.apiUrl}/filter`, { params });
   }
 
-  addPhoneNumber(phoneNumber: CreatePhoneNumberDto): Observable<PhoneNumber> {
-    return this.http.post<PhoneNumber>(this.apiUrl, phoneNumber);
+  addPhoneNumber(phoneNumber: CreatePhoneNumberDto): Observable<any> {
+    return this.http.post<any>(this.apiUrl, phoneNumber);
   }
 
-  updatePhoneNumber(phoneNumber: UpdatePhoneNumberDto): Observable<PhoneNumber> {
-    return this.http.put<PhoneNumber>(this.apiUrl, phoneNumber);
+  updatePhoneNumber(phoneNumber: UpdatePhoneNumberDto): Observable<any> {
+    return this.http.put<any>(this.apiUrl, phoneNumber);
   }
 }

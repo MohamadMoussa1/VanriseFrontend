@@ -148,15 +148,13 @@
                           >
                             Reserve
                           </button>
-                          @if (hasActiveReservations(client.id)) {
-                            <button
-                              type="button"
-                              class="btn btn-sm btn-outline-danger"
-                              (click)="openUnreserveModal(client)"
-                            >
-                              Unreserve
-                            </button>
-                          }
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            (click)="openUnreserveModal(client)"
+                          >
+                            Unreserve
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -231,6 +229,7 @@
                   placeholder="Enter client name"
                   name="clientName"
                   [(ngModel)]="currentClientName"
+                  maxlength="255"
                   required
                   autofocus
                 />
@@ -407,20 +406,26 @@
                   <span class="ms-2 text-muted small">Loading active phone numbers...</span>
                 </div>
               } @else {
-                <div class="mb-3">
-                  <label for="unreservePhoneNumberSelect" class="form-label fw-semibold">
-                    Phone Number <span class="text-danger">*</span>
-                  </label>
-                  <app-phone-number-selector
-                    #unreservePhoneSelector
-                    id="unreservePhoneNumberSelect"
-                    name="unreservePhoneNumber"
-                    [customPhoneNumbers]="clientActiveReservations"
-                    placeholder="Select an active phone number"
-                    [(selectedValue)]="selectedUnreservePhoneNumberId"
-                    [required]="true"
-                  ></app-phone-number-selector>
-                </div>
+                @if (clientActiveReservations.length === 0) {
+                  <div class="alert alert-info py-2 mb-0 small">
+                    No active reservations found for this client.
+                  </div>
+                } @else {
+                  <div class="mb-3">
+                    <label for="unreservePhoneNumberSelect" class="form-label fw-semibold">
+                      Phone Number <span class="text-danger">*</span>
+                    </label>
+                    <app-phone-number-selector
+                      #unreservePhoneSelector
+                      id="unreservePhoneNumberSelect"
+                      name="unreservePhoneNumber"
+                      [customPhoneNumbers]="clientActiveReservations"
+                      placeholder="Select an active phone number"
+                      [(selectedValue)]="selectedUnreservePhoneNumberId"
+                      [required]="true"
+                    ></app-phone-number-selector>
+                  </div>
+                }
               }
             </div>
 
@@ -436,7 +441,7 @@
               <button
                 type="submit"
                 class="btn btn-danger"
-                [disabled]="isUnreserving || isLoadingActiveNumbers || !selectedUnreservePhoneNumberId"
+                [disabled]="isUnreserving || isLoadingActiveNumbers || !selectedUnreservePhoneNumberId || clientActiveReservations.length === 0"
               >
                 @if (isUnreserving) {
                   <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>

@@ -42,6 +42,14 @@
       </div>
     </div>
 
+    <!-- Success Alert Notification -->
+    @if (successMessage) {
+      <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Success:</strong> {{ successMessage }}
+        <button type="button" class="btn-close" (click)="successMessage = null" aria-label="Close"></button>
+      </div>
+    }
+
     <!-- Error Alert Notification -->
     @if (errorMessage) {
       <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -164,6 +172,7 @@
                   placeholder="Enter device name"
                   name="deviceName"
                   [(ngModel)]="currentDeviceName"
+                  maxlength="255"
                   required
                   autofocus
                 />

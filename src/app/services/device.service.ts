@@ -19,12 +19,12 @@ export class DeviceService {
     return this.http.get<Device[]>(`${this.apiUrl}/filter`, { params });
   }
 
-  addDevice(device: { name: string }): Observable<Device> {
+  addDevice(device: { name: string }): Observable<any> {
     const params = new HttpParams().set('name', device.name.trim());
-    return this.http.post<Device>(this.apiUrl, device, { params });
+    return this.http.post<any>(this.apiUrl, { name: device.name.trim() }, { params });
   }
 
-  updateDevice(device: Device): Observable<Device> {
-    return this.http.put<Device>(this.apiUrl, device);
+  updateDevice(device: Device): Observable<any> {
+    return this.http.put<any>(this.apiUrl, device);
   }
 }

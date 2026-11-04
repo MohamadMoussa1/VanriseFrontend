@@ -6,6 +6,7 @@ import { PhoneNumberReservation } from '../models/phone-number-reservation.model
 import { ClientSelectorComponent } from '../shared/client-selector/client-selector.component';
 import { PhoneNumberSelectorComponent } from '../shared/phone-number-selector/phone-number-selector.component';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
+import { extractErrorMessage } from '../utils/error-handler.util';
 
 @Component({
   selector: 'app-phone-number-reservations',
@@ -52,7 +53,7 @@ export class PhoneNumberReservationsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching reservations:', err);
-        this.errorMessage = 'Failed to load reservations from the server. Ensure the backend is running.';
+        this.errorMessage = extractErrorMessage(err, 'Failed to load reservations from the server.');
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -83,7 +84,12 @@ export class PhoneNumberReservationsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error filtering reservations:', err);
-        this.errorMessage = 'Failed to filter reservations.';
+        if (err.status === 404) {
+          this.reservations = [];
+          this.errorMessage = extractErrorMessage(err, 'No reservations found matching the filter criteria.');
+        } else {
+          this.errorMessage = extractErrorMessage(err, 'Failed to filter reservations.');
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }

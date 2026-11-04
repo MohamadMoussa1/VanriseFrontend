@@ -2,6 +2,7 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { extractErrorMessage } from '../../utils/error-handler.util';
 
 @Component({
   selector: 'app-navbar',
@@ -54,16 +55,14 @@ export class NavbarComponent {
         this.isLoggingOut = false;
         console.error('Logout failed:', err);
 
-        if (err.status === 0) {
-          this.errorMessage = 'Unable to connect to the authentication server. Please ensure the backend is running.';
-        } else if (err.status >= 500) {
-          this.errorMessage = 'A server error occurred while logging out. Please try again.';
-        } else if (err.error?.message) {
-          this.errorMessage = err.error.message;
-        } else {
-          this.errorMessage = 'Logout failed. Please try again.';
+        if (err.status === 401) {
+          this.authService.clearAuthState();
+          this.cdr.markForCheck();
+          this.router.navigate(['/login']);
+          return;
         }
 
+        this.errorMessage = extractErrorMessage(err, 'Logout failed. Please try again.');
         this.cdr.markForCheck();
       }
     });

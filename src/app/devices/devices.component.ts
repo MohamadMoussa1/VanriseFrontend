@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DeviceService } from '../services/device.service';
 import { Device } from '../models/device.model';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
+import { extractErrorMessage, extractSuccessMessage } from '../utils/error-handler.util';
 
 @Component({
   selector: 'app-devices',
@@ -21,6 +22,7 @@ export class DevicesComponent implements OnInit {
   isLoading: boolean = false;
   isSaving: boolean = false;
   errorMessage: string | null = null;
+  successMessage: string | null = null;
   formError: string | null = null;
 
   // Modal State
@@ -46,7 +48,7 @@ export class DevicesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching all devices:', err);
-        this.errorMessage = 'Failed to load devices from the server. Ensure the backend is running and CORS is enabled.';
+        this.errorMessage = extractErrorMessage(err, 'Failed to load devices from the server.');
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -72,7 +74,12 @@ export class DevicesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error filtering devices:', err);
-        this.errorMessage = `Failed to filter devices for "${trimmed}".`;
+        if (err.status === 404) {
+          this.devices = [];
+          this.errorMessage = extractErrorMessage(err, `No devices found matching "${trimmed}".`);
+        } else {
+          this.errorMessage = extractErrorMessage(err, `Failed to filter devices for "${trimmed}".`);
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -107,9 +114,19 @@ export class DevicesComponent implements OnInit {
   }
 
   saveDevice(): void {
+    if (this.isSaving) {
+      return;
+    }
+
     const trimmedName = this.currentDeviceName.trim();
     if (!trimmedName) {
-      this.formError = 'Device name is required.';
+      this.formError = 'Device Name is required.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (trimmedName.length > 255) {
+      this.formError = 'Device Name cannot exceed 255 characters.';
       this.cdr.markForCheck();
       return;
     }
@@ -125,25 +142,21 @@ export class DevicesComponent implements OnInit {
       };
 
       this.deviceService.updateDevice(updatedDevice).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Device updated successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadDevices();
         },
         error: (err) => {
           console.error('Error updating device:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to update device. Please try again.';
-          }
           this.isSaving = false;
+          if (err.status === 404) {
+            this.formError = extractErrorMessage(err, 'Device does not exist.');
+          } else {
+            this.formError = extractErrorMessage(err, 'Failed to update device. Please try again.');
+          }
           this.cdr.markForCheck();
         }
       });
@@ -153,25 +166,17 @@ export class DevicesComponent implements OnInit {
       };
 
       this.deviceService.addDevice(newDevice).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Device added successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadDevices();
         },
         error: (err) => {
           console.error('Error adding device:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to add device. Please try again.';
-          }
           this.isSaving = false;
+          this.formError = extractErrorMessage(err, 'Failed to add device. Please try again.');
           this.cdr.markForCheck();
         }
       });

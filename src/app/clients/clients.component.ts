@@ -8,6 +8,7 @@ import { PhoneNumberSelectorComponent } from '../shared/phone-number-selector/ph
 import { PhoneNumberReservationService } from '../services/phone-number-reservation.service';
 import { ActivePhoneNumberReservation } from '../models/phone-number-reservation.model';
 import { NavbarComponent } from '../shared/navbar/navbar.component';
+import { extractErrorMessage, extractSuccessMessage } from '../utils/error-handler.util';
 
 @Component({
   selector: 'app-clients',
@@ -38,9 +39,6 @@ export class ClientsComponent implements OnInit {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   formError: string | null = null;
-
-  // Active reservations tracking per client
-  activeReservationsMap: Map<number, ActivePhoneNumberReservation[]> = new Map();
 
   // Filter state
   filterName: string = '';
@@ -84,13 +82,12 @@ export class ClientsComponent implements OnInit {
     this.clientService.getAllClients().subscribe({
       next: (data) => {
         this.clients = data || [];
-        this.loadActiveReservationsForClients(this.clients);
         this.isLoading = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error fetching all clients:', err);
-        this.errorMessage = 'Failed to load clients from the server. Ensure the backend is running.';
+        this.errorMessage = extractErrorMessage(err, 'Failed to load clients from the server.');
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -113,13 +110,17 @@ export class ClientsComponent implements OnInit {
     this.clientService.getFilteredClients(trimmedName || undefined, typeValue).subscribe({
       next: (data) => {
         this.clients = data || [];
-        this.loadActiveReservationsForClients(this.clients);
         this.isLoading = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error filtering clients:', err);
-        this.errorMessage = 'Failed to filter clients.';
+        if (err.status === 404) {
+          this.clients = [];
+          this.errorMessage = extractErrorMessage(err, 'No clients found matching the filter criteria.');
+        } else {
+          this.errorMessage = extractErrorMessage(err, 'Failed to filter clients.');
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -186,20 +187,55 @@ export class ClientsComponent implements OnInit {
   }
 
   saveClient(): void {
+    if (this.isSaving) {
+      return;
+    }
+
     const trimmedName = this.currentClientName.trim();
     if (!trimmedName) {
-      this.formError = 'Client name is required.';
+      this.formError = 'Client Name is required.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (trimmedName.length > 255) {
+      this.formError = 'Client Name cannot exceed 255 characters.';
       this.cdr.markForCheck();
       return;
     }
 
     const selectedType = this.modalTypeSelector ? this.modalTypeSelector.getData() : this.currentClientType;
-    const typeNum = selectedType !== null && selectedType !== undefined ? selectedType : ClientType.Individual;
+    const typeNum = selectedType !== null && selectedType !== undefined ? Number(selectedType) : ClientType.Individual;
     let birthDateVal: string | null = null;
 
     if (typeNum === ClientType.Individual) {
       birthDateVal = this.currentBirthDate.trim() ? this.currentBirthDate.trim() : null;
+
+      if (birthDateVal) {
+        const birthDateObj = new Date(birthDateVal);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (birthDateObj > today) {
+          this.formError = 'Birth date cannot be in the future.';
+          this.cdr.markForCheck();
+          return;
+        }
+
+        let age = today.getFullYear() - birthDateObj.getFullYear();
+        const m = today.getMonth() - birthDateObj.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+          age--;
+        }
+
+        if (age <= 18) {
+          this.formError = 'Individual clients must be older than 18 years.';
+          this.cdr.markForCheck();
+          return;
+        }
+      }
     } else {
+      // Organization clients must have a null BirthDate
       birthDateVal = null;
     }
 
@@ -216,25 +252,21 @@ export class ClientsComponent implements OnInit {
       };
 
       this.clientService.updateClient(updatedClient).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Client updated successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadClients();
         },
         error: (err) => {
           console.error('Error updating client:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to update client. Please try again.';
-          }
           this.isSaving = false;
+          if (err.status === 404) {
+            this.formError = extractErrorMessage(err, 'Client does not exist.');
+          } else {
+            this.formError = extractErrorMessage(err, 'Failed to update client. Please try again.');
+          }
           this.cdr.markForCheck();
         }
       });
@@ -246,54 +278,21 @@ export class ClientsComponent implements OnInit {
       };
 
       this.clientService.addClient(newClient).subscribe({
-        next: () => {
+        next: (res) => {
           this.isSaving = false;
+          this.successMessage = extractSuccessMessage(res, 'Client added successfully.');
+          this.errorMessage = null;
           this.closeModal();
           this.loadClients();
         },
         error: (err) => {
           console.error('Error adding client:', err);
-          if (err.error?.errors) {
-            console.error('Validation errors detail:', JSON.stringify(err.error.errors));
-            const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-            this.formError = errorList.join(' | ') || err.error.title || 'Validation error.';
-          } else if (err.error?.title) {
-            this.formError = err.error.title;
-          } else if (err.error?.message) {
-            this.formError = err.error.message;
-          } else {
-            this.formError = 'Failed to add client. Please try again.';
-          }
           this.isSaving = false;
+          this.formError = extractErrorMessage(err, 'Failed to add client. Please try again.');
           this.cdr.markForCheck();
         }
       });
     }
-  }
-
-  // ================= Active Reservations Tracking =================
-
-  loadActiveReservationsForClients(clients: Client[]): void {
-    for (const client of clients) {
-      this.refreshActiveReservationsForClient(client.id);
-    }
-  }
-
-  refreshActiveReservationsForClient(clientId: number): void {
-    this.reservationService.getActiveReservations(clientId).subscribe({
-      next: (data) => {
-        this.activeReservationsMap.set(clientId, data || []);
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error(`Error loading active reservations for client ${clientId}:`, err);
-      }
-    });
-  }
-
-  hasActiveReservations(clientId: number): boolean {
-    const active = this.activeReservationsMap.get(clientId);
-    return !!active && active.length > 0;
   }
 
   // ================= Reserve Phone Number Modal =================
@@ -338,18 +337,17 @@ export class ClientsComponent implements OnInit {
     this.cdr.markForCheck();
 
     this.reservationService.reservePhoneNumber(clientId, phoneNumberId).subscribe({
-      next: () => {
+      next: (res) => {
         this.isReserving = false;
         this.closeReserveModal();
-        this.refreshActiveReservationsForClient(clientId);
-        this.successMessage = 'Phone number reserved successfully.';
+        this.successMessage = extractSuccessMessage(res, 'Phone number reserved successfully.');
         this.errorMessage = null;
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error reserving phone number:', err);
-        this.reserveError = this.extractErrorMessage(err, 'Failed to reserve phone number. Please try again.');
         this.isReserving = false;
+        this.reserveError = extractErrorMessage(err, 'Failed to reserve phone number. Please try again.');
         this.cdr.markForCheck();
       }
     });
@@ -370,7 +368,6 @@ export class ClientsComponent implements OnInit {
     this.reservationService.getActiveReservations(client.id).subscribe({
       next: (data) => {
         this.clientActiveReservations = data || [];
-        this.activeReservationsMap.set(client.id, this.clientActiveReservations);
         this.isLoadingActiveNumbers = false;
         if (this.clientActiveReservations.length === 1) {
           this.selectedUnreservePhoneNumberId = this.clientActiveReservations[0].phoneNumberId;
@@ -380,7 +377,7 @@ export class ClientsComponent implements OnInit {
       error: (err) => {
         console.error(`Error loading active reservations for client ${client.id}:`, err);
         this.isLoadingActiveNumbers = false;
-        this.unreserveError = 'Failed to load active reservations for this client.';
+        this.unreserveError = extractErrorMessage(err, 'Failed to load active reservations for this client.');
         this.cdr.markForCheck();
       }
     });
@@ -419,40 +416,19 @@ export class ClientsComponent implements OnInit {
     this.cdr.markForCheck();
 
     this.reservationService.unreservePhoneNumber(clientId, phoneNumberId).subscribe({
-      next: () => {
+      next: (res) => {
         this.isUnreserving = false;
         this.closeUnreserveModal();
-        this.refreshActiveReservationsForClient(clientId);
-        this.successMessage = 'Phone number unreserved successfully.';
+        this.successMessage = extractSuccessMessage(res, 'Phone number unreserved successfully.');
         this.errorMessage = null;
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error unreserving phone number:', err);
-        this.unreserveError = this.extractErrorMessage(err, 'Failed to unreserve phone number. Please try again.');
         this.isUnreserving = false;
+        this.unreserveError = extractErrorMessage(err, 'Failed to unreserve phone number. Please try again.');
         this.cdr.markForCheck();
       }
     });
-  }
-
-  private extractErrorMessage(err: any, defaultMsg: string): string {
-    if (err?.error?.errors) {
-      const errorList = Object.entries(err.error.errors).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`);
-      return errorList.join(' | ') || err.error.title || defaultMsg;
-    }
-    if (err?.error?.message) {
-      return err.error.message;
-    }
-    if (err?.error?.title) {
-      return err.error.title;
-    }
-    if (typeof err?.error === 'string' && err.error.trim().length > 0) {
-      return err.error;
-    }
-    if (err?.statusText && err.statusText !== 'OK') {
-      return `Server error: ${err.statusText} (${err.status})`;
-    }
-    return defaultMsg;
   }
 }

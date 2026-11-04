@@ -5,6 +5,7 @@ import { ReportService } from '../../services/report.service';
 import { ClientsPerTypeReportItem } from '../../models/report.model';
 import { ClientTypeSelectorComponent } from '../../shared/client-type-selector/client-type-selector.component';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
+import { extractErrorMessage } from '../../utils/error-handler.util';
 
 @Component({
   selector: 'app-clients-per-type-report',
@@ -48,15 +49,22 @@ export class ClientsPerTypeReportComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching clients per type report:', err);
-        this.errorMessage = 'Failed to load report data from the server. Ensure the backend is running.';
+        if (err.status === 404) {
+          this.reportData = [];
+          this.errorMessage = extractErrorMessage(err, 'No report data found.');
+        } else {
+          this.errorMessage = extractErrorMessage(err, 'Failed to load report data from the server.');
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
-  onFilter(): void {
-    const typeValue = this.clientTypeSelector ? this.clientTypeSelector.getData() : this.filterType;
+  onFilter(changedType?: number | null): void {
+    const typeValue = changedType !== undefined
+      ? changedType
+      : (this.clientTypeSelector ? this.clientTypeSelector.getData() : this.filterType);
     this.loadReport(typeValue);
   }
 

@@ -72,7 +72,9 @@ describe('AuthService', () => {
     expect(service.isLoggedIn()).toBe(true);
 
     service.logout().subscribe({
-      next: () => fail('Logout should have failed'),
+      next: () => {
+        throw new Error('Logout should have failed');
+      },
       error: (err) => {
         expect(err.status).toBe(500);
       }

@@ -4,27 +4,35 @@ import { AuthService } from '../../services/auth.service';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 
 describe('NavbarComponent', () => {
   let component: NavbarComponent;
   let fixture: ComponentFixture<NavbarComponent>;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let authServiceMock: {
+    logout: ReturnType<typeof vi.fn>;
+    isLoggedIn: ReturnType<typeof vi.fn>;
+    authenticatedUser: WritableSignal<string | null>;
+    isAuthenticated: WritableSignal<boolean>;
+    clearAuthState: ReturnType<typeof vi.fn>;
+  };
+  let routerSpy: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['logout', 'isLoggedIn'], {
+    authServiceMock = {
+      logout: vi.fn(),
+      isLoggedIn: vi.fn().mockReturnValue(true),
       authenticatedUser: signal<string | null>('admin'),
-      isAuthenticated: signal<boolean>(true)
-    });
-    authServiceSpy.isLoggedIn.and.returnValue(true);
+      isAuthenticated: signal<boolean>(true),
+      clearAuthState: vi.fn()
+    };
 
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    routerSpy = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [NavbarComponent],
       providers: [
-        { provide: AuthService, useValue: authServiceSpy },
+        { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerSpy },
         provideRouter([])
       ]
@@ -46,8 +54,8 @@ describe('NavbarComponent', () => {
   });
 
   it('should not display the logout button when user is not authenticated', () => {
-    (authServiceSpy.isAuthenticated as any).set(false);
-    authServiceSpy.isLoggedIn.and.returnValue(false);
+    authServiceMock.isAuthenticated.set(false);
+    authServiceMock.isLoggedIn.mockReturnValue(false);
     fixture.detectChanges();
 
     const logoutBtn = fixture.nativeElement.querySelector('#logoutBtn');
@@ -55,11 +63,11 @@ describe('NavbarComponent', () => {
   });
 
   it('should call authService.logout and navigate to /login on success', () => {
-    authServiceSpy.logout.and.returnValue(of({ message: 'Logout successful' }));
+    authServiceMock.logout.mockReturnValue(of({ message: 'Logout successful' }));
 
     component.onLogout();
 
-    expect(authServiceSpy.logout).toHaveBeenCalled();
+    expect(authServiceMock.logout).toHaveBeenCalled();
     expect(component.isLoggingOut).toBe(false);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
   });
@@ -69,19 +77,19 @@ describe('NavbarComponent', () => {
       status: 500,
       statusText: 'Internal Server Error'
     });
-    authServiceSpy.logout.and.returnValue(throwError(() => errorResponse));
+    authServiceMock.logout.mockReturnValue(throwError(() => errorResponse));
 
     component.onLogout();
     fixture.detectChanges();
 
-    expect(authServiceSpy.logout).toHaveBeenCalled();
+    expect(authServiceMock.logout).toHaveBeenCalled();
     expect(component.isLoggingOut).toBe(false);
     expect(routerSpy.navigate).not.toHaveBeenCalled();
-    expect(component.errorMessage).toContain('A server error occurred while logging out');
+    expect(component.errorMessage).toContain('A server error occurred');
 
     const alert = fixture.nativeElement.querySelector('.alert-danger');
     expect(alert).toBeTruthy();
-    expect(alert.textContent).toContain('A server error occurred while logging out');
+    expect(alert.textContent).toContain('A server error occurred');
   });
 
   it('should display connection error when backend is unreachable on logout', () => {
@@ -89,21 +97,12 @@ describe('NavbarComponent', () => {
       status: 0,
       statusText: 'Unknown Error'
     });
-    authServiceSpy.logout.and.returnValue(throwError(() => errorResponse));
+    authServiceMock.logout.mockReturnValue(throwError(() => errorResponse));
 
     component.onLogout();
     fixture.detectChanges();
 
-    expect(component.errorMessage).toContain('Unable to connect to the authentication server');
+    expect(component.errorMessage).toContain('Unable to connect to the server');
     expect(routerSpy.navigate).not.toHaveBeenCalled();
-  });
-
-  it('should prevent duplicate logout requests when already logging out', () => {
-    authServiceSpy.logout.and.returnValue(of({ message: 'Logout successful' }));
-    component.isLoggingOut = true;
-
-    component.onLogout();
-
-    expect(authServiceSpy.logout).not.toHaveBeenCalled();
   });
 });

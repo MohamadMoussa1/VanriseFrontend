@@ -6,6 +6,7 @@ import { PhoneNumbersPerDeviceReportItem } from '../../models/report.model';
 import { DeviceSelectorComponent } from '../../shared/device-selector/device-selector.component';
 import { PhoneNumberStatusSelectorComponent } from '../../shared/phone-number-status-selector/phone-number-status-selector.component';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
+import { extractErrorMessage } from '../../utils/error-handler.util';
 
 @Component({
   selector: 'app-phone-numbers-per-device-report',
@@ -52,7 +53,12 @@ export class PhoneNumbersPerDeviceReportComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching phone numbers per device report:', err);
-        this.errorMessage = 'Failed to load report data from the server. Ensure the backend is running.';
+        if (err.status === 404) {
+          this.reportData = [];
+          this.errorMessage = extractErrorMessage(err, 'No report data found.');
+        } else {
+          this.errorMessage = extractErrorMessage(err, 'Failed to load report data from the server.');
+        }
         this.isLoading = false;
         this.cdr.markForCheck();
       }

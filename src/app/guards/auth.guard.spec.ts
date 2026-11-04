@@ -4,12 +4,12 @@ import { authGuard } from './auth.guard';
 import { AuthService } from '../services/auth.service';
 
 describe('authGuard', () => {
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let authServiceSpy: { isLoggedIn: ReturnType<typeof vi.fn> };
+  let routerSpy: { createUrlTree: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['isLoggedIn']);
-    routerSpy = jasmine.createSpyObj('Router', ['createUrlTree']);
+    authServiceSpy = { isLoggedIn: vi.fn() };
+    routerSpy = { createUrlTree: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -20,7 +20,7 @@ describe('authGuard', () => {
   });
 
   it('should allow access when user is authenticated', () => {
-    authServiceSpy.isLoggedIn.and.returnValue(true);
+    authServiceSpy.isLoggedIn.mockReturnValue(true);
 
     const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 
@@ -28,9 +28,9 @@ describe('authGuard', () => {
   });
 
   it('should redirect to /login when user is not authenticated', () => {
-    authServiceSpy.isLoggedIn.and.returnValue(false);
+    authServiceSpy.isLoggedIn.mockReturnValue(false);
     const mockUrlTree = {} as any;
-    routerSpy.createUrlTree.and.returnValue(mockUrlTree);
+    routerSpy.createUrlTree.mockReturnValue(mockUrlTree);
 
     const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
 

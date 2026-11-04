@@ -16,6 +16,7 @@
               [showAllOption]="true"
               allOptionLabel="All Types"
               [(selectedValue)]="filterType"
+              (selectionChange)="onFilter($event)"
             ></app-client-type-selector>
           </div>
 
